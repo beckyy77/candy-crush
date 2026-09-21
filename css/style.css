@@ -30,6 +30,17 @@ body {
 .screen { height: 100dvh; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
 .hidden { display: none !important; }
 
+/* ===== downloaded artwork background ===== */
+#bg {
+  position: fixed; inset: 0; z-index: -2;
+  background: url(../img/background.jpg) center / cover no-repeat;
+}
+#bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(rgba(26,11,46,.58), rgba(26,11,46,.72));
+}
+
 /* ===== floating background bubbles ===== */
 #bubbles { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
 .bubble {

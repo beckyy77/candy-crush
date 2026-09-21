@@ -343,6 +343,11 @@ const UI = (() => {
     });
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
+      // auto-reload once when a new version takes over, so updates apply fast
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!reloaded) { reloaded = true; location.reload(); }
+      });
     }
   }
 

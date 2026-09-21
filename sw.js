@@ -1,4 +1,4 @@
-const CACHE = 'dolly-v3';
+const CACHE = 'dolly-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const ASSETS = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/favicon.svg',
+  './img/background.jpg',
 ];
 
 self.addEventListener('install', e => {
