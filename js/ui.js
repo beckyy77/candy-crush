@@ -49,8 +49,8 @@ const UI = (() => {
   /* ===== the saga map ===== */
   const NODE_GAP = 84;
 
-  function nodePos(i, width) {
-    const y = 70 + i * NODE_GAP;
+  function nodePos(i, width, height) {
+    const y = height - 100 - i * NODE_GAP; // level 1 at the bottom, climb up!
     const x = width / 2 + Math.sin(i * 0.55) * width * 0.30;
     return { x, y };
   }
@@ -63,19 +63,19 @@ const UI = (() => {
 
     let html = `<svg class="map-path" width="${width}" height="${height}">
       <polyline points="${Array.from({ length: total }, (_, i) => {
-        const { x, y } = nodePos(i, width);
+        const { x, y } = nodePos(i, width, height);
         return `${x.toFixed(1)},${y.toFixed(1)}`;
       }).join(' ')}" fill="none" stroke="rgba(255,154,213,.55)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 18"/>
     </svg>`;
 
     // friend pins
     for (const f of FRIENDS) {
-      const { x, y } = nodePos(f.level - 1, width);
+      const { x, y } = nodePos(f.level - 1, width, height);
       html += `<div class="pin" style="left:${x + 46}px;top:${y - 10}px"><span class="pin-avatar">${f.avatar}</span><span class="pin-name">${f.name}</span></div>`;
     }
 
     for (let n = 1; n <= total; n++) {
-      const { x, y } = nodePos(n - 1, width);
+      const { x, y } = nodePos(n - 1, width, height);
       const stars = Progress.stars(n);
       const unlockedN = Progress.unlocked;
       const state = n < unlockedN ? 'done' : n === unlockedN ? 'current' : 'locked';
@@ -91,7 +91,11 @@ const UI = (() => {
 
     const current = mapCanvas.querySelector('.map-node.current');
     if (current) {
-      setTimeout(() => current.scrollIntoView({ block: 'center', behavior: 'smooth' }), 60);
+      setTimeout(() => {
+        // center the current level in view (level 1 lives near the bottom)
+        const target = Math.max(0, current.offsetTop + 29 - mapScroll.clientHeight / 2);
+        mapScroll.scrollTo({ top: target, behavior: 'smooth' });
+      }, 60);
     }
   }
 
