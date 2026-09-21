@@ -223,8 +223,8 @@ body {
   background-image: conic-gradient(rgba(255,255,255,.04) 90deg, rgba(255,255,255,.09) 90deg 180deg, rgba(255,255,255,.04) 180deg 270deg, rgba(255,255,255,.09) 270deg);
   background-size: 25% 25%;
 }
-#fx-layer, #jelly-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: 20px; }
-#fx-layer { z-index: 5; }
+#fx-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: 20px; z-index: 5; }
+#jelly-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 
 /* ice blockers */
 .icing { position: absolute; left: 0; top: 0; width: 12.5%; height: 12.5%; pointer-events: none; }
@@ -251,18 +251,29 @@ body {
   100% { transform: scale(0); opacity: 0; }
 }
 
-/* jelly cells */
+/* jelly cells — glossy blue, clearly visible under the candies */
 .jelly {
   position: absolute; left: 0; top: 0;
   width: 12.5%; height: 12.5%;
-  background: rgba(180, 225, 255, .35);
-  border-radius: 22%;
-  box-shadow: inset 0 0 0 3px rgba(255,255,255,.45), inset 0 0 12px rgba(140,200,255,.4);
-  transition: opacity .25s, transform .25s;
+  background: linear-gradient(160deg, rgba(110,220,255,.6), rgba(70,150,255,.45));
+  border-radius: 18%;
+  box-shadow:
+    inset 0 0 0 3px rgba(255,255,255,.9),
+    inset 0 -7px 10px rgba(60,140,255,.4),
+    0 0 10px rgba(100,200,255,.4);
+  animation: jellyPulse 2s ease-in-out infinite;
 }
 .jelly[data-l="2"] {
-  background: rgba(180, 225, 255, .6);
-  box-shadow: inset 0 0 0 4px rgba(255,255,255,.75), inset 0 0 16px rgba(140,200,255,.6);
+  background: linear-gradient(160deg, rgba(110,220,255,.85), rgba(70,150,255,.7));
+  box-shadow:
+    inset 0 0 0 4px rgba(255,255,255,1),
+    inset 0 0 0 9px rgba(160,230,255,.55),
+    inset 0 -7px 10px rgba(60,140,255,.5),
+    0 0 14px rgba(100,200,255,.6);
+}
+@keyframes jellyPulse {
+  0%, 100% { opacity: .8; }
+  50% { opacity: 1; }
 }
 
 /* ===== candies ===== */

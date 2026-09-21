@@ -827,6 +827,8 @@ function startLevel(n) {
   refreshBoosterBar();
   updateGameHud();
   UI.showScreen('game');
+  if (level.isJelly) setTimeout(() => shout('CLEAR THE JELLY! 🧊'), 700);
+  else if (level.icing && level.icing.length) setTimeout(() => shout('CRACK THE ICE! 🧊'), 700);
 }
 
 function objectiveMet() {
