@@ -22,6 +22,7 @@
     <div class="topbar">
       <button class="chip" id="player-chip" title="Your profile">👤 <span id="player-name-label">Sign in</span></button>
       <div class="topbar-right">
+        <button class="chip" id="share-btn" title="Share the game">🔗</button>
         <button class="chip" id="leaderboard-btn" title="Leaderboard">🏆</button>
         <button class="chip" id="shop-btn" title="Shop">🛒</button>
         <button class="chip" id="settings-btn" aria-label="Settings">⚙️</button>
@@ -168,8 +169,20 @@
     </div>
   </div>
 
+  <div id="qr" class="modal hidden">
+    <div class="panel qr-panel">
+      <button class="close" id="qr-close" aria-label="Close">✕</button>
+      <h2>Share Dolly Crush 📱</h2>
+      <p class="hint">Anyone can play — anywhere in the world 🌍<br>Let a friend scan this code:</p>
+      <div id="qr-code" class="qr-code"></div>
+      <p class="qr-url">beckyy77.github.io/candy-crush</p>
+      <button id="copy-link">🔗 Copy link</button>
+    </div>
+  </div>
+
   <div id="toast" aria-live="polite"></div>
 
+  <script src="js/vendor/qrcode.js"></script>
   <script src="js/levels.js"></script>
   <script src="js/game.js"></script>
   <script src="js/ui.js"></script>

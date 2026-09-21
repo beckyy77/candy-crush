@@ -268,6 +268,45 @@ const UI = (() => {
     });
   });
 
+  /* ===== share + QR ===== */
+  const GAME_URL = 'https://beckyy77.github.io/candy-crush/';
+  const qrModal = $('qr');
+
+  function openQr() {
+    const box = $('qr-code');
+    box.innerHTML = '';
+    if (typeof qrcode === 'function') {
+      const qr = qrcode(0, 'M');
+      qr.addData(GAME_URL);
+      qr.make();
+      box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+    } else {
+      box.textContent = GAME_URL;
+    }
+    qrModal.classList.remove('hidden');
+  }
+
+  $('share-btn').addEventListener('click', async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Dolly Crush Saga 🍭', text: 'Play Dolly Crush Saga with me!', url: GAME_URL });
+        return;
+      } catch (e) { /* user cancelled — fall through to QR */ }
+    }
+    openQr();
+  });
+  $('qr-close').addEventListener('click', () => qrModal.classList.add('hidden'));
+  qrModal.addEventListener('click', e => { if (e.target === qrModal) qrModal.classList.add('hidden'); });
+  $('copy-link').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(GAME_URL);
+      showToast('🔗 Link copied — send it to a friend!');
+    } catch (e) {
+      showToast(GAME_URL);
+    }
+    qrModal.classList.add('hidden');
+  });
+
   /* ===== settings + profile (carried over) ===== */
   const settingsModal = $('settings');
   const playerNameInput = $('player-name');

@@ -1,8 +1,9 @@
-const CACHE = 'dolly-v8';
+const CACHE = 'dolly-v9';
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
+  './js/vendor/qrcode.js',
   './js/levels.js',
   './js/game.js',
   './js/ui.js',
