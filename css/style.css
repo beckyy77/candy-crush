@@ -226,6 +226,31 @@ body {
 #fx-layer, #jelly-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: 20px; }
 #fx-layer { z-index: 5; }
 
+/* ice blockers */
+.icing { position: absolute; left: 0; top: 0; width: 12.5%; height: 12.5%; pointer-events: none; }
+.icing::before {
+  content: ''; position: absolute; inset: 2%; border-radius: 24%;
+  background: radial-gradient(circle at 30% 25%, #ffffff, #cfe6ff 55%, #a8c8ec);
+  border: 3px solid rgba(255,255,255,.95);
+  box-shadow: inset 0 -7px 10px rgba(120,170,220,.55), inset 0 4px 6px rgba(255,255,255,.8), 0 4px 10px rgba(0,0,0,.3);
+}
+.icing[data-l="2"]::before {
+  background: radial-gradient(circle at 30% 25%, #e8f4ff, #9cc3ee 55%, #6f9fd8);
+}
+.icing[data-l="3"]::before {
+  background: radial-gradient(circle at 30% 25%, #dceeff, #7fb0e2 55%, #4f80c0);
+}
+.icing.hit::before { animation: icingShake .32s ease; }
+@keyframes icingShake {
+  25% { transform: translateX(-3px) rotate(-2deg); }
+  75% { transform: translateX(3px) rotate(2deg); }
+}
+.icing.pop::before { animation: icingPop .3s ease forwards; }
+@keyframes icingPop {
+  40% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
 /* jelly cells */
 .jelly {
   position: absolute; left: 0; top: 0;

@@ -168,11 +168,22 @@ function randType(r, c) {
 }
 
 function newBoard() {
-  boardEl.querySelectorAll('.candy').forEach(el => el.remove());
+  boardEl.querySelectorAll('.candy, .icing').forEach(el => el.remove());
   grid = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
+  // place ice blockers first — candies fill in around them
+  if (level?.icing) {
+    for (const [r, c, layers] of level.icing) {
+      const el = document.createElement('div');
+      el.className = 'icing';
+      el.dataset.l = layers;
+      el.style.transform = posOf(r, c);
+      boardEl.appendChild(el);
+      grid[r][c] = { type: -2, blocker: layers, special: null, el };
+    }
+  }
   for (let r = 0; r < ROWS; r++)
     for (let c = 0; c < COLS; c++)
-      grid[r][c] = makeCandy(randType(r, c), r, c);
+      if (!grid[r][c]) grid[r][c] = makeCandy(randType(r, c), r, c);
   if (!hasAnyMove()) newBoard();
 }
 
@@ -468,9 +479,45 @@ function updateGameHud() {
 async function processWave(clears, creates, combo) {
   const { final, wrappedBlasts, bonus } = expandSpecials(clears);
   for (const cr of creates) final.delete(key(cr.r, cr.c));
-  if (final.size === 0 && creates.length === 0) return [];
 
-  const pts = (final.size * POINTS_PER_CANDY + bonus) * combo;
+  // ===== ice blockers: direct hits + damage from adjacent clears =====
+  let icingPts = 0;
+  const poppedIcing = [];
+  const damaged = new Set();
+  const hitIcing = (r, c) => {
+    const cell = grid[r][c];
+    if (!cell || !cell.blocker) return;
+    cell.blocker--;
+    icingPts += 150;
+    if (cell.blocker <= 0) {
+      cell.el.classList.add('pop');
+      poppedIcing.push(cell.el);
+      grid[r][c] = null;
+    } else {
+      cell.el.dataset.l = cell.blocker;
+      cell.el.classList.add('hit');
+      setTimeout(() => cell.el && cell.el.classList.remove('hit'), 350);
+    }
+  };
+  for (const k of [...final]) {
+    const [r, c] = unkey(k);
+    if (grid[r]?.[c]?.blocker) {
+      final.delete(k);
+      if (!damaged.has(k)) { damaged.add(k); hitIcing(r, c); }
+    }
+  }
+  for (const k of final) {
+    const [r, c] = unkey(k);
+    for (const [dr, dc] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+      const rr = r + dr, cc = c + dc;
+      if (rr < 0 || rr >= ROWS || cc < 0 || cc >= COLS) continue;
+      const kk = key(rr, cc);
+      if (grid[rr][cc]?.blocker && !damaged.has(kk)) { damaged.add(kk); hitIcing(rr, cc); }
+    }
+  }
+  if (final.size === 0 && creates.length === 0 && poppedIcing.length === 0) return [];
+
+  const pts = (final.size * POINTS_PER_CANDY + bonus + icingPts) * combo;
   score += pts;
   updateGameHud();
   sfxPop(combo);
@@ -490,6 +537,7 @@ async function processWave(clears, creates, combo) {
   }
   await sleep(300);
   popped.forEach(el => el.remove());
+  poppedIcing.forEach(el => el.remove());
 
   for (const cr of creates) applySpecial(cr.r, cr.c, cr.special);
 
@@ -499,21 +547,34 @@ async function processWave(clears, creates, combo) {
 
 function gravityRefill() {
   for (let c = 0; c < COLS; c++) {
-    let write = ROWS - 1;
-    for (let r = ROWS - 1; r >= 0; r--) {
-      const cell = grid[r][c];
-      if (cell) {
-        if (r !== write) {
-          grid[write][c] = cell;
-          grid[r][c] = null;
-          cell.el.style.transform = posOf(write, c);
+    // segments are separated by ice blockers: candies compact within a
+    // segment, and only segments with no blocker above can refill from the top
+    const blockerRows = [];
+    for (let r = 0; r < ROWS; r++) if (grid[r][c]?.blocker) blockerRows.push(r);
+    const bounds = [-1, ...blockerRows, ROWS];
+    for (let i = bounds.length - 2; i >= 0; i--) {
+      const start = bounds[i] + 1;
+      const end = bounds[i + 1] - 1;
+      if (end < start) continue;
+      let write = end;
+      for (let r = end; r >= start; r--) {
+        const cell = grid[r][c];
+        if (cell && !cell.blocker) {
+          if (r !== write) {
+            grid[write][c] = cell;
+            grid[r][c] = null;
+            cell.el.style.transform = posOf(write, c);
+          }
+          write--;
         }
-        write--;
+      }
+      const hasBlockerAbove = blockerRows.some(br => br < start);
+      if (!hasBlockerAbove) {
+        const holes = write - start + 1;
+        for (let r = write; r >= start; r--)
+          grid[r][c] = makeCandy(rnd(activeTypes()), r - holes, c);
       }
     }
-    const holes = write + 1;
-    for (let r = write; r >= 0; r--)
-      grid[r][c] = makeCandy(rnd(activeTypes()), r - holes, c);
   }
 }
 
@@ -551,6 +612,7 @@ function swapData(a, b) {
 
 async function trySwap(a, b) {
   if (busy) return;
+  if (grid[a[0]]?.[a[1]]?.blocker || grid[b[0]]?.[b[1]]?.blocker) return; // ice can't be swapped
   busy = true;
   clearSelection();
   sfxSwap();
@@ -639,6 +701,7 @@ async function ensureMovesExist() {
 /* ===== selection & input ===== */
 function select(cell) {
   clearSelection();
+  if (grid[cell[0]]?.[cell[1]]?.blocker) return;
   selected = cell;
   grid[cell[0]][cell[1]]?.el.classList.add('selected');
 }

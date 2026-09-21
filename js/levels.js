@@ -17,15 +17,15 @@ const Levels = (() => {
 
   function config(n) {
     const rng = mulberry32(n * 7919 + 13);
-    const moves = Math.max(15, 32 - Math.floor(n / 14));
-    const target = Math.round((900 + n * 260 + Math.pow(n, 1.75) * 6) / 50) * 50;
-    const types = n < 8 ? 5 : 6;
+    const moves = Math.max(13, 28 - Math.floor(n / 12));
+    const target = Math.round((1800 + 300 * n + 0.5 * Math.pow(n, 2.5)) / 50) * 50;
+    const types = n < 5 ? 5 : 6;
     const isJelly = n >= 6 && (n % 3 !== 0);
 
     const jelly = [];
     if (isJelly) {
-      const count = Math.min(4 + Math.floor(n / 6), 34);
-      const baseLayer = n >= 60 ? 2 : 1;
+      const count = Math.min(5 + Math.floor(n / 4), 40);
+      const baseLayer = n >= 40 ? 2 : 1;
       const seen = new Set();
       let guard = 0;
       while (jelly.length < count && guard++ < 600) {
@@ -38,7 +38,26 @@ const Levels = (() => {
         }
       }
     }
-    return { n, moves, target, types, isJelly, jelly };
+
+    // ice blockers: candies can't fall through, crack them with adjacent matches
+    const icing = [];
+    if (n >= 12) {
+      const count = Math.min(2 + Math.floor(n / 25), 12);
+      const layers = n >= 80 ? 2 : 1;
+      const jellySet = new Set(jelly.map(([r, c]) => r * 8 + c));
+      const seen = new Set();
+      let guard = 0;
+      while (icing.length < count && guard++ < 600) {
+        const r = Math.floor(rng() * 8);
+        const c = Math.floor(rng() * 8);
+        const k = r * 8 + c;
+        if (!jellySet.has(k) && !seen.has(k)) {
+          seen.add(k);
+          icing.push([r, c, rng() < 0.3 ? layers + 1 : layers]);
+        }
+      }
+    }
+    return { n, moves, target, types, isJelly, jelly, icing };
   }
 
   return { TOTAL, config, STAR_MULT };
