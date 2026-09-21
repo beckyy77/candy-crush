@@ -139,14 +139,77 @@ const UI = (() => {
     if (!buyBtn) return;
     const item = SHOP_ITEMS.find(i => i.id === buyBtn.dataset.buy);
     if (!item) return;
-    if (Progress.spendCoins(item.price)) {
+    askConfirm({
+      title: 'Buy this?',
+      icon: item.icon,
+      name: item.name,
+      desc: item.desc,
+      priceNum: item.price,
+      priceLabel: `${item.price} 🪙`,
+    }, () => {
+      if (!Progress.spendCoins(item.price)) return;
       Progress.addBooster(item.id);
       renderShop();
       updateTopbars();
       if (typeof refreshBoosterBar === 'function') refreshBoosterBar();
       buzz(30);
-    }
+      showToast(`${item.icon} ${item.name} purchased!`);
+    });
   });
+
+  /* ===== confirm popup + toast ===== */
+  const confirmModal = $('confirm');
+  const confirmOk = $('confirm-ok');
+  let confirmAction = null;
+
+  function askConfirm({ title, icon, name, desc, priceNum = 0, priceLabel = '', gift = null }, action) {
+    $('confirm-title').textContent = title;
+    $('confirm-body').innerHTML = `
+      <div class="shop-icon">${icon}</div>
+      <div class="shop-info"><b>${name}</b><small>${desc}</small></div>
+      <div class="confirm-price">${priceLabel}</div>`;
+    const hint = $('confirm-hint');
+    hint.className = 'hint';
+    if (priceNum > Progress.coins) {
+      if (gift) {
+        hint.textContent = gift;
+        hint.classList.add('ok');
+        confirmOk.textContent = 'Accept gift 💖';
+        confirmOk.disabled = false;
+      } else {
+        hint.textContent = `Not enough coins — you have ${Progress.coins.toLocaleString()} 🪙. Earn more stars! ⭐`;
+        hint.classList.add('err');
+        confirmOk.textContent = 'Yes, buy! 🛒';
+        confirmOk.disabled = true;
+      }
+    } else {
+      hint.textContent = `Your balance after: ${(Progress.coins - priceNum).toLocaleString()} 🪙`;
+      confirmOk.textContent = 'Yes, buy! 🛒';
+      confirmOk.disabled = false;
+    }
+    confirmAction = action;
+    confirmModal.classList.remove('hidden');
+  }
+
+  confirmOk.addEventListener('click', () => {
+    confirmModal.classList.add('hidden');
+    const action = confirmAction;
+    confirmAction = null;
+    if (action) action();
+  });
+  $('confirm-cancel').addEventListener('click', () => { confirmModal.classList.add('hidden'); confirmAction = null; });
+  confirmModal.addEventListener('click', e => {
+    if (e.target === confirmModal) { confirmModal.classList.add('hidden'); confirmAction = null; }
+  });
+
+  let toastT;
+  function showToast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastT);
+    toastT = setTimeout(() => t.classList.remove('show'), 2200);
+  }
 
   const shopModal = $('shop');
   function openShop() { renderShop(); shopModal.classList.remove('hidden'); }
@@ -188,14 +251,21 @@ const UI = (() => {
   $('lives-close').addEventListener('click', () => livesModal.classList.add('hidden'));
   livesModal.addEventListener('click', e => { if (e.target === livesModal) livesModal.classList.add('hidden'); });
   $('lives-refill').addEventListener('click', () => {
-    if (Progress.spendCoins(150)) {
+    askConfirm({
+      title: 'Refill lives?',
+      icon: '❤️',
+      name: 'Full Lives',
+      desc: 'Back to 5 hearts instantly',
+      priceNum: 150,
+      priceLabel: '150 🪙',
+      gift: 'Not enough coins — Dolly gifts you a free refill 💖 (demo)',
+    }, () => {
+      if (!Progress.spendCoins(150)) Progress.refillLives(); // Dolly's gift
       Progress.refillLives();
-    } else {
-      Progress.refillLives(); // Dolly's gift (demo)
-      $('lives-text').textContent = 'Dolly gave you a free refill 💖 (demo gift)';
-    }
-    updateTopbars();
-    setTimeout(() => livesModal.classList.add('hidden'), 900);
+      updateTopbars();
+      showToast('❤️ Lives refilled — go crush!');
+      setTimeout(() => livesModal.classList.add('hidden'), 400);
+    });
   });
 
   /* ===== settings + profile (carried over) ===== */
