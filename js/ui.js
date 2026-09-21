@@ -275,24 +275,28 @@ const UI = (() => {
   function openQr() {
     const box = $('qr-code');
     box.innerHTML = '';
-    if (typeof qrcode === 'function') {
-      const qr = qrcode(0, 'M');
-      qr.addData(GAME_URL);
-      qr.make();
-      box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
-    } else {
+    try {
+      if (typeof qrcode === 'function') {
+        const qr = qrcode(0, 'M');
+        qr.addData(GAME_URL);
+        qr.make();
+        box.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+      } else {
+        box.textContent = GAME_URL;
+      }
+    } catch (e) {
       box.textContent = GAME_URL;
     }
     qrModal.classList.remove('hidden');
   }
 
   $('share-btn').addEventListener('click', async () => {
-    if (navigator.share) {
-      try {
+    try {
+      if (navigator.share) {
         await navigator.share({ title: 'Dolly Crush Saga 🍭', text: 'Play Dolly Crush Saga with me!', url: GAME_URL });
         return;
-      } catch (e) { /* user cancelled — fall through to QR */ }
-    }
+      }
+    } catch (e) { /* cancelled or unsupported — show QR instead */ }
     openQr();
   });
   $('qr-close').addEventListener('click', () => qrModal.classList.add('hidden'));
