@@ -27,6 +27,8 @@ Deploy over HTTPS (e.g. GitHub Pages), then:
 - Match 3+ of the same in a row/column to clear them
 - Cascades chain for combo multipliers
 - 30 moves — beat your best score!
+- ⚙️ Settings: player profile (name/email), sound FX, vibration, floating bubbles
+- 📲 In-game Install button (Settings → Install) to add it to your phone's home screen
 
 ## Tech
 
