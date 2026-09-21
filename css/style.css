@@ -38,7 +38,7 @@ body {
 #bg::after {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(rgba(26,11,46,.58), rgba(26,11,46,.72));
+  background: linear-gradient(rgba(26,11,46,.35), rgba(26,11,46,.5));
 }
 
 /* ===== floating background bubbles ===== */

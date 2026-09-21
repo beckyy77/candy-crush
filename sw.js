@@ -1,4 +1,4 @@
-const CACHE = 'dolly-v4';
+const CACHE = 'dolly-v5';
 const ASSETS = [
   './',
   './index.html',
