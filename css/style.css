@@ -34,22 +34,41 @@ body {
 #bg {
   position: fixed; inset: 0; z-index: -2;
   background: url(../img/background.jpg) center / cover no-repeat;
+  filter: saturate(1.25) brightness(1.15);
+}
+/* drifting colorful glow blobs = lively */
+#bg::before {
+  content: '';
+  position: absolute; inset: -20%;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255,95,158,.32), transparent 42%),
+    radial-gradient(circle at 80% 70%, rgba(76,201,240,.28), transparent 42%),
+    radial-gradient(circle at 55% 15%, rgba(255,209,102,.2), transparent 38%);
+  animation: bgGlow 16s ease-in-out infinite alternate;
+}
+@keyframes bgGlow {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(4%, -5%) scale(1.18); }
 }
 #bg::after {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(rgba(26,11,46,.35), rgba(26,11,46,.5));
+  background: linear-gradient(rgba(26,11,46,.18), rgba(26,11,46,.38));
 }
 
 /* ===== floating background bubbles ===== */
 #bubbles { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: -1; }
 .bubble {
   position: absolute; bottom: -90px; border-radius: 50%;
-  background: radial-gradient(circle at 30% 28%, rgba(255,255,255,.45), rgba(255,255,255,.07) 55%, rgba(255,255,255,0) 75%);
+  background: radial-gradient(circle at 30% 28%, rgba(255,255,255,.6), var(--bub, rgba(255,255,255,.1)) 55%, rgba(255,255,255,0) 75%);
   animation-name: rise;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }
+.bubble.p1 { --bub: rgba(255,95,158,.28); }
+.bubble.p2 { --bub: rgba(76,201,240,.26); }
+.bubble.p3 { --bub: rgba(6,214,160,.24); }
+.bubble.p4 { --bub: rgba(255,209,102,.26); }
 @keyframes rise { to { transform: translateY(-115vh); } }
 
 /* ===== chips / pills ===== */

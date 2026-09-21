@@ -276,15 +276,15 @@ const UI = (() => {
     const el = $('bubbles');
     el.innerHTML = '';
     if (!settings.bubbles) return;
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 18; i++) {
       const b = document.createElement('div');
-      b.className = 'bubble';
+      b.className = 'bubble p' + (1 + (i % 4));
       const size = 14 + Math.random() * 58;
       b.style.width = b.style.height = size + 'px';
       b.style.left = Math.random() * 100 + '%';
       b.style.animationDuration = 9 + Math.random() * 14 + 's';
       b.style.animationDelay = -Math.random() * 20 + 's';
-      b.style.opacity = 0.25 + Math.random() * 0.5;
+      b.style.opacity = 0.3 + Math.random() * 0.5;
       el.appendChild(b);
     }
   }
