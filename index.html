@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Candy Crush</title>
+  <meta name="description" content="A sweet match-3 game. Built on Omarchy.">
+  <meta name="theme-color" content="#2b1055">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand">🍒 Candy Crush</div>
+    <div class="stats">
+      <div>Score<b id="score">0</b></div>
+      <div>Best<b id="best">0</b></div>
+      <div>Moves<b id="moves">30</b></div>
+    </div>
+  </header>
+
+  <main>
+    <div id="board" aria-label="Candy board"></div>
+  </main>
+
+  <div id="overlay" class="hidden">
+    <div class="panel">
+      <h2 id="overlay-title">Out of moves!</h2>
+      <p id="overlay-text"></p>
+      <button id="restart">Play again</button>
+    </div>
+  </div>
+
+  <script src="js/game.js"></script>
+</body>
+</html>
