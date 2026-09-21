@@ -1,6 +1,6 @@
 {
-  "name": "Candy Crush",
-  "short_name": "Candy",
+  "name": "Dolly Crush Saga",
+  "short_name": "Dolly",
   "description": "A sweet match-3 game. Built on Omarchy.",
   "start_url": "./",
   "scope": "./",

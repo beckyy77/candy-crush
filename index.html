@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-  <title>Candy Crush</title>
-  <meta name="description" content="A sweet match-3 game. Built on Omarchy.">
+  <title>Dolly Crush Saga</title>
+  <meta name="description" content="Dolly Crush Saga — a sweet match-3 adventure. 300 levels, special candies, color bombs. Built on Omarchy.">
   <meta name="theme-color" content="#2b1055">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
@@ -16,40 +16,79 @@
 <body>
   <div id="bubbles" aria-hidden="true"></div>
 
-  <header>
-    <div class="brand">🍒 Candy Crush</div>
-    <div class="header-actions">
+  <!-- ============ HOME SCREEN ============ -->
+  <div id="screen-home" class="screen">
+    <div class="topbar">
       <button class="chip" id="player-chip" title="Your profile">👤 <span id="player-name-label">Sign in</span></button>
-      <button class="chip" id="settings-btn" aria-label="Settings">⚙️</button>
+      <div class="topbar-right">
+        <button class="chip" id="leaderboard-btn" title="Leaderboard">🏆</button>
+        <button class="chip" id="shop-btn" title="Shop">🛒</button>
+        <button class="chip" id="settings-btn" aria-label="Settings">⚙️</button>
+      </div>
     </div>
-  </header>
+    <div class="topbar statsbar">
+      <span class="chip static">🪙 <b id="coins-count">0</b></span>
+      <span class="chip static">❤️ <b id="lives-count">5</b></span>
+      <span class="chip static">⭐ <b id="home-stars">0</b></span>
+    </div>
 
-  <div class="stats-row">
-    <div class="stat">Score<b id="score">0</b></div>
-    <div class="stat">Best<b id="best">0</b></div>
-    <div class="stat">Moves<b id="moves">30</b></div>
+    <div class="banner">
+      <div class="mascot">🍭</div>
+      <h1>Dolly Crush <span>Saga</span></h1>
+      <p id="greeting">Ready to crush some candy?</p>
+    </div>
+    <p class="tip" id="dolly-tip">🍭 Match 4 in a row for a striped candy!</p>
+
+    <div id="map-scroll">
+      <div id="map-canvas"></div>
+    </div>
   </div>
 
-  <main>
+  <!-- ============ GAME SCREEN ============ -->
+  <div id="screen-game" class="screen hidden">
+    <div class="game-top">
+      <button class="chip" id="back-btn" title="Back to map">🏠</button>
+      <div class="game-info">
+        <b id="level-label">Level 1</b>
+        <div class="objective"><div class="obj-bar"><div id="obj-fill"></div></div><small id="obj-text"></small></div>
+      </div>
+      <div class="pills">
+        <span class="pill">🎯 <b id="hud-score">0</b></span>
+        <span class="pill">🖐️ <b id="hud-moves">0</b></span>
+      </div>
+    </div>
+
     <div class="board-wrap">
+      <div id="jelly-layer" aria-hidden="true"></div>
       <div id="board" aria-label="Candy board"></div>
       <div id="fx-layer" aria-hidden="true"></div>
     </div>
-  </main>
 
-  <div id="overlay" class="hidden">
-    <div class="panel">
-      <h2 id="overlay-title">Out of moves!</h2>
-      <p id="overlay-text"></p>
-      <button id="restart">Play again</button>
+    <div class="booster-bar">
+      <button class="booster" id="booster-hammer" title="Lollipop Hammer: smash one candy">🍭 <b id="count-hammer">0</b></button>
+      <button class="booster" id="booster-moves" title="+5 moves">➕ <b id="count-moves">0</b></button>
+      <button class="booster" id="booster-shuffle" title="Shuffle board">🔄 <b id="count-shuffle">0</b></button>
+    </div>
+
+    <div id="overlay" class="hidden">
+      <div class="panel">
+        <h2 id="overlay-title">Dolly says: SWEET!</h2>
+        <div id="overlay-stars"></div>
+        <p id="overlay-text"></p>
+        <div class="overlay-btns">
+          <button id="retry-btn">🔁 Retry</button>
+          <button id="overlay-map-btn">🗺️ Map</button>
+          <button id="next-btn">Next ▶</button>
+        </div>
+      </div>
     </div>
   </div>
 
+  <!-- ============ MODALS ============ -->
   <div id="settings" class="modal hidden">
     <div class="panel settings-panel">
       <button class="close" id="settings-close" aria-label="Close">✕</button>
       <h2>Settings</h2>
-
       <section>
         <h3>👤 Player</h3>
         <label class="field">Name
@@ -61,7 +100,6 @@
         <p class="hint" id="email-hint">Saved on this device only.</p>
         <button class="small" id="save-profile">Save profile</button>
       </section>
-
       <section>
         <h3>✨ Experience</h3>
         <label class="toggle-row">
@@ -81,8 +119,7 @@
           <span class="switch"></span>
         </label>
       </section>
-
-      <section id="install-section">
+      <section>
         <h3>📲 Install</h3>
         <button id="install-btn" class="hidden">Install app</button>
         <p class="hint" id="install-hint"></p>
@@ -90,6 +127,36 @@
     </div>
   </div>
 
+  <div id="shop" class="modal hidden">
+    <div class="panel settings-panel">
+      <button class="close" id="shop-close" aria-label="Close">✕</button>
+      <h2>Dolly's Shop 🛒</h2>
+      <p class="shop-balance">Your coins: <b id="shop-coins">0</b> 🪙 <small>(earn stars to get more!)</small></p>
+      <div id="shop-list"></div>
+    </div>
+  </div>
+
+  <div id="leaderboard" class="modal hidden">
+    <div class="panel settings-panel">
+      <button class="close" id="lb-close" aria-label="Close">✕</button>
+      <h2>Leaderboard 🏆</h2>
+      <div id="lb-list"></div>
+    </div>
+  </div>
+
+  <div id="lives-modal" class="modal hidden">
+    <div class="panel">
+      <h2>Out of lives! 💔</h2>
+      <p id="lives-text"></p>
+      <div class="overlay-btns">
+        <button id="lives-refill">💖 Refill (150 🪙)</button>
+        <button id="lives-close">Later</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/levels.js"></script>
   <script src="js/game.js"></script>
+  <script src="js/ui.js"></script>
 </body>
 </html>

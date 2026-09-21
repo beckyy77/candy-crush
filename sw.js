@@ -1,9 +1,11 @@
-const CACHE = 'candy-v2';
+const CACHE = 'dolly-v3';
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
+  './js/levels.js',
   './js/game.js',
+  './js/ui.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
