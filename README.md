@@ -30,6 +30,19 @@ Deploy over HTTPS (e.g. GitHub Pages), then:
 - ⚙️ Settings: player profile (name/email), sound FX, vibration, floating bubbles
 - 📲 In-game Install button (Settings → Install) to add it to your phone's home screen
 
+## ⚔️ Versus — battle friends online
+
+Race a friend on the **same board** over the internet, 8-Ball-Pool style:
+
+- ⚔️ button on the home screen → **Create room** → share the code / QR / link
+- Friend joins → host hits **Start** → 3‑2‑1 → identical boards, 20 moves
+- Live opponent score bar, quick-chat bubbles (“Nice! 👏”), lobby text chat
+- Winner takes 🪙 coins; your W–L record shows on the leaderboard
+- Rage-quit detection: leaving mid-duel forfeits the match
+
+Needs a one-time free Firebase setup — see **FIREBASE-SETUP.md** (~5 min).
+Everything else in the game keeps working fully offline.
+
 ## Tech
 
 Plain HTML/CSS/JS. No build step, no frameworks, no dependencies.

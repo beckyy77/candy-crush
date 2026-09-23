@@ -60,7 +60,12 @@ const Levels = (() => {
     return { n, moves, target, types, isJelly, jelly, icing };
   }
 
-  return { TOTAL, config, STAR_MULT };
+  // versus duels: pure score race, no jelly/icing — the seed comes from the room
+  function duel(moves = 20) {
+    return { n: 0, moves, target: 0, types: 6, isJelly: false, jelly: [], icing: [] };
+  }
+
+  return { TOTAL, config, duel, STAR_MULT };
 })();
 
 /* ===== persistent progress: stars, coins, lives, boosters ===== */
@@ -76,12 +81,13 @@ const Progress = (() => {
     lives: MAX_LIVES,
     livesTs: 0,
     boosters: { hammer: 1, moves: 1, shuffle: 1 },
+    duels: { w: 0, l: 0 },
   };
 
   function load() {
     try {
       const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
-      data = { ...data, ...saved, boosters: { ...data.boosters, ...(saved.boosters || {}) } };
+      data = { ...data, ...saved, boosters: { ...data.boosters, ...(saved.boosters || {}) }, duels: { ...data.duels, ...(saved.duels || {}) } };
     } catch {}
   }
   const save = () => localStorage.setItem(KEY, JSON.stringify(data));
@@ -131,7 +137,14 @@ const Progress = (() => {
   }
   const addBooster = (id, n = 1) => { data.boosters[id] = (data.boosters[id] || 0) + n; save(); };
 
-  return { load, save, livesData, loseLife, refillLives, stars, totalStars, setStars, addCoins, spendCoins, getBooster, spendBooster, addBooster, get coins() { return data.coins; }, get unlocked() { return data.unlocked; } };
+  function recordDuel(kind) {
+    data.duels = data.duels || { w: 0, l: 0 };
+    if (kind === 'w') data.duels.w++;
+    if (kind === 'l') data.duels.l++;
+    save();
+  }
+
+  return { load, save, livesData, loseLife, refillLives, stars, totalStars, setStars, addCoins, spendCoins, getBooster, spendBooster, addBooster, recordDuel, get duels() { return data.duels || { w: 0, l: 0 }; }, get coins() { return data.coins; }, get unlocked() { return data.unlocked; } };
 })();
 
 /* ===== demo friends pinned on the map ===== */

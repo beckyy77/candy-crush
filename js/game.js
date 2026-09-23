@@ -37,6 +37,7 @@ let jelly = [];           // jelly[r][c] = layers left
 let jellyEls = [];        // jellyEls[r][c] = overlay div | null
 let jellyLeft = 0;
 let level = null;         // Levels.config(n)
+let duel = null;          // active versus duel | null
 let score = 0;
 let movesLeft = 0;
 let busy = false;
@@ -94,6 +95,7 @@ const sfxStriped = () => tone(900, 0.2, 'sawtooth', 0.1, 0, 250);
 const sfxBomb = (p = 1) => { tone(90, 0.28, 'square', 0.16 * p); tone(55, 0.34, 'sine', 0.18 * p, 0.02); };
 const sfxWin = () => [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.18, 'sine', 0.16, i * 0.13));
 const sfxFail = () => [392, 330, 262].forEach((f, i) => tone(f, 0.2, 'triangle', 0.14, i * 0.18));
+const sfxChat = () => tone(880, 0.07, 'triangle', 0.09, 0, 660);
 
 function buzz(pattern) {
   if (vibrationOn() && navigator.vibrate) navigator.vibrate(pattern);
@@ -156,9 +158,9 @@ function makeCandy(type, r, c) {
 
 function activeTypes() { return level ? level.types : 6; }
 
-function randType(r, c) {
+function randType(r, c, roll = rnd) {
   for (;;) {
-    const t = rnd(activeTypes());
+    const t = roll(activeTypes());
     const l1 = grid[r][c - 1], l2 = grid[r][c - 2];
     const u1 = grid[r - 1]?.[c], u2 = grid[r - 2]?.[c];
     if (c >= 2 && l1?.type === t && l2?.type === t) continue;
@@ -181,9 +183,15 @@ function newBoard() {
       grid[r][c] = { type: -2, blocker: layers, special: null, el };
     }
   }
+  // duels: both players fill the SAME seeded board; refills stay random
+  let roll = rnd;
+  if (duel) {
+    const gen = mulberry32((duel.seed + duel.boardAttempt++ * 1013904223) >>> 0);
+    roll = n => Math.floor(gen() * n);
+  }
   for (let r = 0; r < ROWS; r++)
     for (let c = 0; c < COLS; c++)
-      if (!grid[r][c]) grid[r][c] = makeCandy(randType(r, c), r, c);
+      if (!grid[r][c]) grid[r][c] = makeCandy(randType(r, c, roll), r, c);
   if (!hasAnyMove()) newBoard();
 }
 
@@ -469,6 +477,13 @@ function jellyHit(r, c) {
 function updateGameHud() {
   hudScore.textContent = fmt(score);
   hudMoves.textContent = movesLeft;
+  if (duel) {
+    const lead = score - duel.oppScore;
+    objFill.style.width = Math.min(100, score / Math.max(score, duel.oppScore, 1) * 100) + '%';
+    objText.textContent = `⚔️ ${duel.opponent.name}: ${fmt(duel.oppScore)}${duel.oppFinished ? ' ✅' : ''} · ${lead >= 0 ? '+' : ''}${fmt(lead)}`;
+    if (typeof MP !== 'undefined') MP.reportState(score, movesLeft);
+    return;
+  }
   objFill.style.width = Math.min(100, score / level.target * 100) + '%';
   objText.textContent = level.isJelly
     ? `🧊 jelly left: ${jellyLeft} · 🎯 ${fmt(level.target)}`
@@ -781,6 +796,7 @@ function refreshBoosterBar() {
 
 boosterHammer.addEventListener('click', () => {
   if (levelEnded) return;
+  if (duel) { UI.showToast('No boosters in duels! ⚔️'); return; }
   if (Progress.getBooster('hammer') <= 0) { UI.openShop(); return; }
   hammerMode = !hammerMode;
   clearSelection();
@@ -789,6 +805,7 @@ boosterHammer.addEventListener('click', () => {
 
 boosterMoves.addEventListener('click', () => {
   if (levelEnded || busy) return;
+  if (duel) { UI.showToast('No boosters in duels! ⚔️'); return; }
   if (!Progress.spendBooster('moves')) { UI.openShop(); return; }
   movesLeft += 5;
   refreshBoosterBar();
@@ -800,6 +817,7 @@ boosterMoves.addEventListener('click', () => {
 
 boosterShuffle.addEventListener('click', async () => {
   if (levelEnded || busy) return;
+  if (duel) { UI.showToast('No boosters in duels! ⚔️'); return; }
   if (!Progress.spendBooster('shuffle')) { UI.openShop(); return; }
   refreshBoosterBar();
   busy = true;
@@ -812,6 +830,7 @@ boosterShuffle.addEventListener('click', async () => {
 
 /* ===== level lifecycle ===== */
 function startLevel(n) {
+  if (duel) cleanupDuel();
   level = Levels.config(n);
   score = 0;
   movesLeft = level.moves;
@@ -837,9 +856,112 @@ function objectiveMet() {
 
 function endTurn() {
   if (levelEnded) return;
+  if (duel) {
+    if (movesLeft <= 0) return finishDuel();
+    ensureMovesExist();
+    return;
+  }
   if (objectiveMet()) return levelWin();
   if (movesLeft <= 0) return levelFail();
   ensureMovesExist();
+}
+
+/* ===== versus duel lifecycle ===== */
+function isDuelActive() { return !!duel; }
+
+async function duelBegin(cfg) {
+  busy = true; // block input during the countdown
+  const cd = document.getElementById('countdown');
+  cd.classList.remove('hidden');
+  for (const t of ['3', '2', '1', 'GO! ⚔️']) {
+    cd.textContent = t;
+    cd.style.animation = 'none'; void cd.offsetWidth; cd.style.animation = '';
+    ensureAudio(); sfxSwap(); buzz(20);
+    await sleep(620);
+  }
+  cd.classList.add('hidden');
+  startDuel(cfg);
+}
+
+function startDuel({ seed, moves, opponent, myRole }) {
+  duel = { seed, moves, opponent, myRole, oppScore: 0, oppFinished: false, boardAttempt: 0, done: false };
+  level = Levels.duel(moves);
+  score = 0; movesLeft = moves; levelEnded = false; hammerMode = false;
+  boosterHammer.classList.remove('active');
+  lastSwapCells = null;
+  clearSelection();
+  overlayEl.classList.add('hidden');
+  levelLabel.textContent = `Duel ⚔️`;
+  document.getElementById('opp-avatar').textContent = opponent.avatar || '🙂';
+  document.getElementById('opp-name').textContent = opponent.name;
+  document.getElementById('opp-score').textContent = '0';
+  document.getElementById('opp-fill').style.width = '0%';
+  document.getElementById('opp-done').classList.add('hidden');
+  document.getElementById('opponent-bar').classList.remove('hidden');
+  document.getElementById('chat-fab').classList.remove('hidden');
+  document.getElementById('duel-overlay').classList.add('hidden');
+  buildJelly();
+  newBoard();
+  refreshBoosterBar();
+  updateGameHud();
+  UI.showScreen('game');
+  busy = false;
+  setTimeout(() => shout('SCORE RACE! ⚔️'), 600);
+}
+
+function duelOpponentUpdate(d) {
+  if (!duel) return;
+  const s = d.score || 0;
+  if (s === duel.oppScore && !!d.finished === duel.oppFinished) return;
+  duel.oppScore = s;
+  duel.oppFinished = !!d.finished;
+  document.getElementById('opp-score').textContent = fmt(s);
+  document.getElementById('opp-fill').style.width = Math.min(100, s / Math.max(score, s, 1) * 100) + '%';
+  document.getElementById('opp-done').classList.toggle('hidden', !duel.oppFinished);
+  if (duel.oppFinished && !levelEnded) shout(`${duel.opponent.name.toUpperCase()} FINISHED! 😮`);
+  updateGameHud();
+}
+
+function finishDuel() {
+  levelEnded = true;
+  if (typeof MP !== 'undefined') MP.reportFinished(score);
+  shout('FINISHED! ✅');
+  document.getElementById('duel-title').textContent = 'Out of moves! ✅';
+  document.getElementById('duel-text').textContent = `You locked in ${fmt(score)} — waiting for ${duel.opponent.name}… 👀`;
+  document.getElementById('duel-rematch').classList.add('hidden');
+  document.getElementById('duel-map').classList.remove('hidden');
+  document.getElementById('duel-overlay').classList.remove('hidden');
+}
+
+function duelResultShow(result) {
+  if (!duel) return;
+  duel.done = true;
+  levelEnded = true;
+  const win = result.winner === 'you' || result.winner === duel.myRole;
+  const draw = result.winner === 'draw';
+  const coins = win ? 100 : draw ? 50 : 25;
+  Progress.addCoins(coins);
+  if (!draw) Progress.recordDuel(win ? 'w' : 'l');
+  if (typeof UI !== 'undefined') UI.updateTopbars();
+  document.getElementById('duel-title').textContent = win ? 'YOU WIN! 🏆' : draw ? "IT'S A DRAW! 🤝" : 'YOU LOSE… 😤';
+  const reason = result.reason === 'forfeit' ? (win ? 'your rival fled 🏃' : 'you left the duel 🏳️') : 'score race';
+  document.getElementById('duel-text').textContent = `You ${fmt(score)} — ${duel.opponent.name} ${fmt(duel.oppScore)} · +${coins} 🪙 · ${reason}`;
+  document.getElementById('duel-rematch').classList.remove('hidden');
+  document.getElementById('duel-overlay').classList.remove('hidden');
+  if (win) { sfxWin(); buzz([40, 40, 40, 40, 80]); }
+  else if (!draw) { sfxFail(); buzz([80, 60, 80]); }
+  if (typeof MP !== 'undefined') MP.onResultShown();
+}
+
+function cleanupDuel() {
+  duel = null;
+  levelEnded = true;
+  document.getElementById('opponent-bar').classList.add('hidden');
+  document.getElementById('chat-fab').classList.add('hidden');
+  document.getElementById('duel-overlay').classList.add('hidden');
+  document.getElementById('countdown').classList.add('hidden');
+  document.getElementById('chat-bubbles').innerHTML = '';
+  if (typeof MP !== 'undefined') MP.hideQuick();
 }
 
 function levelWin() {
@@ -881,4 +1003,27 @@ function levelFail() {
 nextBtn.addEventListener('click', () => startLevel(level.n + 1));
 retryBtn.addEventListener('click', () => startLevel(level.n));
 mapBtn.addEventListener('click', () => { overlayEl.classList.add('hidden'); UI.goHome(); });
-backBtn.addEventListener('click', () => { overlayEl.classList.add('hidden'); UI.goHome(); });
+backBtn.addEventListener('click', () => {
+  if (duel && !duel.done) {
+    UI.askConfirm({ title: 'Leave the duel?', icon: '🏳️', name: 'Forfeit match', desc: 'Your rival wins if you leave now', priceLabel: '' }, () => {
+      MP.forfeit();
+      cleanupDuel();
+      UI.goHome();
+    });
+    return;
+  }
+  if (duel) { MP.leaveRoom(); cleanupDuel(); }
+  overlayEl.classList.add('hidden');
+  UI.goHome();
+});
+
+document.getElementById('duel-rematch').addEventListener('click', () => {
+  document.getElementById('duel-overlay').classList.add('hidden');
+  if (typeof MP !== 'undefined') MP.requestRematch();
+});
+document.getElementById('duel-map').addEventListener('click', () => {
+  if (duel && !duel.done) MP.forfeit();
+  else if (typeof MP !== 'undefined') MP.leaveRoom();
+  cleanupDuel();
+  UI.goHome();
+});

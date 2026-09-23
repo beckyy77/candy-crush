@@ -23,6 +23,7 @@
       <button class="chip" id="player-chip" title="Your profile">👤 <span id="player-name-label">Sign in</span></button>
       <div class="topbar-right">
         <button class="chip" id="share-btn" title="Share the game">🔗</button>
+        <button class="chip" id="versus-btn" title="Versus — battle a friend online">⚔️</button>
         <button class="chip" id="leaderboard-btn" title="Leaderboard">🏆</button>
         <button class="chip" id="shop-btn" title="Shop">🛒</button>
         <button class="chip" id="settings-btn" aria-label="Settings">⚙️</button>
@@ -60,11 +61,22 @@
       </div>
     </div>
 
+    <div id="opponent-bar" class="hidden">
+      <span id="opp-avatar">🙂</span>
+      <div class="opp-info">
+        <b id="opp-name">Rival</b>
+        <div class="opp-track"><div id="opp-fill"></div></div>
+      </div>
+      <span class="opp-score">🎯 <b id="opp-score">0</b></span>
+      <span id="opp-done" class="hidden">✅</span>
+    </div>
+
     <div class="board-wrap">
       <div id="board" aria-label="Candy board">
         <div id="jelly-layer" aria-hidden="true"></div>
       </div>
       <div id="fx-layer" aria-hidden="true"></div>
+      <div id="chat-bubbles" aria-hidden="true"></div>
     </div>
 
     <div class="booster-bar">
@@ -85,6 +97,21 @@
         </div>
       </div>
     </div>
+
+    <div id="duel-overlay" class="hidden">
+      <div class="panel">
+        <h2 id="duel-title">⚔️</h2>
+        <p id="duel-text"></p>
+        <div class="overlay-btns">
+          <button id="duel-rematch">🔁 Rematch</button>
+          <button id="duel-map">🗺️ Map</button>
+        </div>
+      </div>
+    </div>
+
+    <button id="chat-fab" class="hidden" title="Quick chat">💬</button>
+    <div id="quickchat" class="hidden"></div>
+    <div id="countdown" class="hidden" aria-hidden="true"></div>
   </div>
 
   <!-- ============ MODALS ============ -->
@@ -181,11 +208,65 @@
     </div>
   </div>
 
+  <!-- ============ VERSUS (online duels) ============ -->
+  <div id="versus" class="modal hidden">
+    <div class="panel settings-panel">
+      <button class="close" id="versus-close" aria-label="Close">✕</button>
+      <h2>Versus Mode ⚔️</h2>
+
+      <div id="vs-lobby">
+        <div id="vs-setup-help" class="hidden">
+          <p class="hint err">⚔️ Online battles aren't set up yet.</p>
+          <p class="hint">
+            It takes ~5 minutes with a free Firebase project:<br>
+            1️⃣ Follow <b>FIREBASE-SETUP.md</b> in the project folder<br>
+            2️⃣ Paste your keys into <b>js/firebase-config.js</b><br>
+            3️⃣ Reload — and battle your friends anywhere! 🌍
+          </p>
+        </div>
+        <p class="hint">Race a friend on the <b>same board</b> — highest score after 20 moves wins! 🏁</p>
+        <div class="vs-actions">
+          <button id="vs-create">⚔️ Create room</button>
+          <div class="vs-join">
+            <input id="vs-code" placeholder="CODE" maxlength="5" autocapitalize="characters" autocomplete="off" spellcheck="false">
+            <button id="vs-join">Join</button>
+          </div>
+        </div>
+        <p class="hint" id="vs-status"></p>
+      </div>
+
+      <div id="vs-room" class="hidden">
+        <p class="hint">Give this code to your friend:</p>
+        <div class="vs-code" id="vs-room-code">—</div>
+        <div class="vs-share-btns">
+          <button class="small" id="vs-copy">🔗 Copy invite</button>
+          <button class="small" id="vs-share">📤 Share</button>
+        </div>
+        <div class="vs-qr" id="vs-qr"></div>
+
+        <div id="vs-players"></div>
+        <p class="hint" id="vs-room-status"></p>
+        <button id="vs-start" class="hidden">🚀 Start match</button>
+
+        <div id="vs-chat">
+          <div id="vs-chat-log"></div>
+          <div class="vs-chat-row">
+            <input id="vs-chat-input" maxlength="120" placeholder="Say something…" autocomplete="off">
+            <button class="small" id="vs-chat-send">➤</button>
+          </div>
+        </div>
+        <button id="vs-leave" class="ghost small">Leave room</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" aria-live="polite"></div>
 
   <script src="js/vendor/qrcode.js"></script>
   <script src="js/levels.js"></script>
   <script src="js/game.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/multiplayer.js"></script>
   <script src="js/ui.js"></script>
 </body>
 </html>

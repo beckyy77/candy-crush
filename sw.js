@@ -1,4 +1,4 @@
-const CACHE = 'dolly-v11';
+const CACHE = 'dolly-v12';
 const ASSETS = [
   './',
   './index.html',
@@ -6,6 +6,8 @@ const ASSETS = [
   './js/vendor/qrcode.js',
   './js/levels.js',
   './js/game.js',
+  './js/firebase-config.js',
+  './js/multiplayer.js',
   './js/ui.js',
   './manifest.webmanifest',
   './icons/icon-192.png',

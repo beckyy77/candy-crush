@@ -182,6 +182,10 @@ const UI = (() => {
         confirmOk.textContent = 'Yes, buy! 🛒';
         confirmOk.disabled = true;
       }
+    } else if (!priceLabel) {
+      hint.textContent = '';
+      confirmOk.textContent = 'Confirm ✔️';
+      confirmOk.disabled = false;
     } else {
       hint.textContent = `Your balance after: ${(Progress.coins - priceNum).toLocaleString()} 🪙`;
       confirmOk.textContent = 'Yes, buy! 🛒';
@@ -225,7 +229,7 @@ const UI = (() => {
     const rows = [
       { name: 'Dolly 🍭', stars: 902, you: false },
       ...FRIENDS.map(f => ({ name: `${f.avatar} ${f.name}`, stars: f.stars, you: false })),
-      { name: `${name}`, stars: Progress.totalStars(), you: true },
+      { name: `${name} ⚔️ ${Progress.duels.w}W–${Progress.duels.l}L`, stars: Progress.totalStars(), you: true },
     ].sort((a, b) => b.stars - a.stars);
     $('lb-list').innerHTML = rows.map((r, i) => `
       <div class="lb-row ${r.you ? 'you' : ''}">
@@ -449,6 +453,10 @@ const UI = (() => {
     refreshInstallUI();
     renderHome();
     setInterval(updateTopbars, 30000);
+
+    // versus invite deep link (?room=CODE) — friend tapped your shared link
+    const roomMatch = location.search.match(/[?&]room=([A-Za-z0-9]{3,10})/);
+    if (roomMatch && typeof MP !== 'undefined' && MP.enabled()) MP.handleRoomLink(roomMatch[1]);
     let resizeT;
     window.addEventListener('resize', () => {
       clearTimeout(resizeT);
@@ -464,7 +472,7 @@ const UI = (() => {
     }
   }
 
-  return { showScreen, goHome, renderHome, updateTopbars, openShop, boot };
+  return { showScreen, goHome, renderHome, updateTopbars, openShop, askConfirm, showToast, boot };
 })();
 
 UI.boot();
